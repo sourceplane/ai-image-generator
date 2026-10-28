@@ -1,0 +1,31 @@
+# The epic's declaration. metadata.name equals the directory name; metadata.key
+# is the task-key prefix this epic reserves (IG → IG-1, IG-2, …). Owner, target
+# date and health are the platform's — never written here.
+apiVersion: orun.io/v1
+kind: Epic
+metadata:
+  name: ai-image-generator
+  key: IG
+spec:
+  title: "Vercel's AI SDK Image Generator on Cloudflare Workers"
+  summary: "Vercel's AI SDK Image Generator — one prompt, the image each provider's model draws from it, side by side — runs on Cloudflare Workers + Static Assets through @opennextjs/cloudflare, drawing with Workers AI through the Worker's own binding from its first deploy and with the template's providers once their keys are Orun secrets, inside the Cirrus baseline's repository conventions, and becomes an Orun baseline that takes a new site from nothing to live on stage and prod in one landing."
+  state: started
+  milestones:
+    - name: "IG0 — the spec"
+      exitCriteria:
+        - "the repository is born with its intent, CI, tooling and spec index, and this doc set and the task contracts are on main"
+      tasks: [IG-1]
+    - name: "IG1 — the image generator on Workers"
+      exitCriteria:
+        - "apps/web is the upstream template, built by OpenNext into one Worker with Static Assets"
+        - "with no key the site draws with Workers AI's four image models through the Worker's AI binding; each of the template's providers appears once its key is set, and the route refuses any other provider or model"
+        - "no provider key is in a bundle: the deploy hands them to the Worker as Worker secrets"
+        - "`pnpm typecheck`, `pnpm lint`, `pnpm test` and `pnpm build` are green, and the Worker fits Workers Free"
+        - "the README says how to run, test, preview and deploy it, how to add a provider, and how every Vercel piece maps to Cloudflare"
+      tasks: [IG-2]
+    - name: "IG2 — a baseline"
+      exitCriteria:
+        - "blueprint.yaml (the console card) and repo-blueprint.yaml (the build) take a new site from nothing to live on stage and prod in one landing, then record it"
+        - "a site built from it carries the site only, renamed throughout to its own name, repository and Worker, with the template's credit and licence intact"
+        - "Baseline CI is green: contract tests, generated component docs, the blueprint read by the pinned orun, the leak gate, the offline bootstrap and the end-to-end tier, over a Workers AI stand-in, with no key and with keys"
+      tasks: [IG-3]

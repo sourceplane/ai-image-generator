@@ -1,0 +1,11 @@
+# ai-image-generator — risks and open questions
+
+| ID | Risk | State | Notes |
+|---|---|---|---|
+| IG-A | `baseline-v1` is not yet proven live | OPEN | Proven offline in Baseline CI: the offline bootstrap with the blueprint's own hooks, the stage lane's own steps in a staged job tree, the site served by `wrangler dev` over a Workers AI stand-in and smoke-tested with the component's own command — with no key, and with made-up keys. A console bootstrap closes it |
+| IG-B | No real Workers AI model has drawn on the Worker | OPEN | The `AI` binding has no local mode, so the e2e binds `AI` to a stand-in Worker (`testing/lib/fake-workers-ai.js`) that answers in each family's shape and refuses an input outside it. The model ids are in Cloudflare's catalog (`@cloudflare/workers-types`' `AiModels`) and the shapes are its documented ones. Closed by drawing once with each model on a live site |
+| IG-C | Workers AI's image models through an adapter written here | ACCEPTED | `workers-ai-provider` 0.7.5, its last AI SDK 4 release, reads every image answer as a stream and cannot read FLUX.1 [schnell]'s base64 (design §2). The adapter is 120 lines, unit-tested against both shapes and the AI SDK's own `generateImage` |
+| IG-D | The site is open | ACCEPTED | As upstream: anyone who reaches it draws on the account's Workers AI (billed by the neuron) and on the owner's provider keys. The README says to put Cloudflare Access in front, or add sign-in, before sharing it |
+| IG-E | A deploy pushes the keys that exist and deletes none | ACCEPTED | Deleting a provider's Orun secret leaves its Worker secret, and the card stays; the README says to `wrangler secret delete` it too |
+| IG-F | Next 16.3.8, not 15.5.15 | ACCEPTED | `@opennextjs/cloudflare` 1.20.11 refuses Next 15.5 at build (out of the Next.js team's support window); 16.3.8 is what every OpenNext starter here runs. React 19.3.1 resolves within upstream's `^19.2.2` |
+| IG-G | Upstream's model lists date from early 2025 | ACCEPTED | Kept as the template's: some providers may retire an id (Imagen 3, DALL·E 2), and that card then fails its request with the template's generic error. Changing the lists is one edit in `lib/provider-config.ts` |
