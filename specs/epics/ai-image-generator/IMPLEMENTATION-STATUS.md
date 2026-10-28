@@ -4,7 +4,7 @@
 |---|---|---|
 | IG0 — the spec | ✅ | the repository's first commit |
 | IG1 — the image generator on Workers | ✅ | IG-2 |
-| IG2 — a baseline | planned | IG-3 |
+| IG2 — a baseline | ✅ | IG-3, tagged `baseline-v1` |
 
 ## Departures from the upstream template
 
