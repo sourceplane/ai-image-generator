@@ -1,0 +1,111 @@
+apiVersion: sourceplane.io/v1
+kind: Component
+metadata:
+  name: web
+  description: The AI SDK image generator — one prompt, images from Workers AI and any provider whose key is set, side by side (Next.js on Cloudflare Workers + Static Assets via @opennextjs/cloudflare, per environment)
+spec:
+  type: cloudflare-workers-assets-turbo
+  lifecycle: production
+  owner: platform
+  # Its pages, attached to it in the workspace's catalog: what the Docs
+  # library shows for it, and what the catalog's docs and runbook checks read.
+  # Generated from what this manifest and its sources declare.
+  docs:
+    overview: docs/overview.md
+    pages:
+      - { path: docs/architecture.md, role: architecture, title: Architecture }
+      - { path: docs/runbook.md, role: runbook, title: Runbook }
+  # `app`, not `web`: a domain and a component share one name space in the
+  # catalog, and a domain called `web` hid this component from it.
+  domain: app
+  path: apps/web
+  # Its own lane per environment: the Next.js build is the longest job in the
+  # plan, and a shared lane would wait on it.
+  lane: isolated
+  # No dependsOn: the site reads no wiring and binds nothing Terraform makes
+  # — its one binding, Workers AI (wrangler.jsonc), is the account's own.
+  #
+  # The template's own providers' keys, stored per environment as the
+  # product's secrets of the same names (README → Add a provider). The Worker
+  # reads them at request time (lib/providers.ts), so the build never sees
+  # one: it runs without them (`env -u`, buildCommand below) and then hands
+  # those that are set to the Worker as Worker SECRETS. BEST-EFFORT
+  # references, wire-now-seed-later: a key nobody has stored is skipped when
+  # the job resolves its secrets (no env var, no failure), and the site
+  # without it draws on Workers AI alone — so a fresh product deploys and
+  # draws before its owner has any provider account at all.
+  optionalSecretEnv:
+    OPENAI_API_KEY: "secret://ai-image-generator/ai-image-generator/{{ .environment }}/OPENAI_API_KEY"
+    REPLICATE_API_TOKEN: "secret://ai-image-generator/ai-image-generator/{{ .environment }}/REPLICATE_API_TOKEN"
+    FIREWORKS_API_KEY: "secret://ai-image-generator/ai-image-generator/{{ .environment }}/FIREWORKS_API_KEY"
+    GOOGLE_CLIENT_EMAIL: "secret://ai-image-generator/ai-image-generator/{{ .environment }}/GOOGLE_CLIENT_EMAIL"
+    GOOGLE_PRIVATE_KEY: "secret://ai-image-generator/ai-image-generator/{{ .environment }}/GOOGLE_PRIVATE_KEY"
+    GOOGLE_VERTEX_PROJECT: "secret://ai-image-generator/ai-image-generator/{{ .environment }}/GOOGLE_VERTEX_PROJECT"
+    GOOGLE_VERTEX_LOCATION: "secret://ai-image-generator/ai-image-generator/{{ .environment }}/GOOGLE_VERTEX_LOCATION"
+  subscribe:
+    environments:
+      - name: dev
+        profile: verify
+      - name: stage
+        profile: verify
+        profileRules:
+          - profile: deploy
+            when:
+              triggerRef: github-push-main
+      - name: prod
+        profile: verify
+        profileRules:
+          - profile: deploy
+            when:
+              triggerRef: github-push-main
+  parameters:
+    nodeVersion: "22"
+    pnpmVersion: "10.12.1"
+
+    workspaceDir: ../..
+    appDir: .
+
+    turboFilter: "@app/web"
+    wranglerConfig: wrangler.jsonc
+
+    # @opennextjs/cloudflare emits a Worker entrypoint plus a static-assets
+    # directory bound via ASSETS — both deploy in one `wrangler deploy`.
+    workerEntrypoint: .open-next/worker.js
+    assetsDir: .open-next/assets
+
+    # Per-env worker name: ai-image-generator-web-{dev,stage,prod}.
+    workerName: ai-image-generator-web
+    environmentAwareWorkerName: true
+
+    # The account's workers.dev subdomain; exported to the smoke step as
+    # ${WORKERS_DEV_SUBDOMAIN} and used to build ${DEPLOYED_URL}.
+    workersDevSubdomain: your-workers-subdomain
+
+    installCommand: pnpm install --frozen-lockfile
+    # The site's public origin (the Open Graph image's absolute URL): the
+    # environment's SITE_URL when intent.yaml sets one (a custom domain), else
+    # its workers.dev URL. The subdomain is written out rather than read from
+    # ${WORKERS_DEV_SUBDOMAIN}: the composition exports that to the smoke step
+    # only, so the build would see it empty. ${ORUN_ENVIRONMENT} the runner
+    # sets for every step.
+    #
+    # No provider key reaches the build (`env -u`), so neither a bundle nor
+    # the bundler's cache holds one. Then the keys the environment has go to
+    # the Worker as SECRETS (tooling/wire/worker-secrets.mjs: `wrangler secret
+    # bulk`, the values over stdin) before the composition deploys it. Only
+    # the deploy lane holds a Cloudflare credential, so a verify lane builds
+    # the same and pushes nothing.
+    buildCommand: NEXT_PUBLIC_SITE_URL="${SITE_URL:-https://ai-image-generator-web-${ORUN_ENVIRONMENT}.your-workers-subdomain.workers.dev}" env -u OPENAI_API_KEY -u REPLICATE_API_TOKEN -u FIREWORKS_API_KEY -u GOOGLE_CLIENT_EMAIL -u GOOGLE_PRIVATE_KEY -u GOOGLE_VERTEX_PROJECT -u GOOGLE_VERTEX_LOCATION pnpm exec turbo run build --filter=@app/web && node ../../tooling/wire/worker-secrets.mjs --secret OPENAI_API_KEY --secret REPLICATE_API_TOKEN --secret FIREWORKS_API_KEY --secret GOOGLE_CLIENT_EMAIL --secret GOOGLE_PRIVATE_KEY --secret GOOGLE_VERTEX_PROJECT --secret GOOGLE_VERTEX_LOCATION --worker "ai-image-generator-web-${ORUN_ENVIRONMENT}" --config wrangler.jsonc
+
+    # Smoke: the page renders to its end (`</html>` — a render that throws
+    # partway through a streamed page still sent a 200), and /api/health
+    # answers ok — the Worker has its Workers AI binding, so the site can
+    # draw with no key; the providers it lists beyond that are the keys the
+    # environment has. Each response is buffered before grep so an early
+    # match cannot SIGPIPE curl.
+    smokeCommand: "html=$(curl -sfL \"${DEPLOYED_URL}/\") && echo \"${html}\" | grep -q '</html>' && health=$(curl -sf \"${DEPLOYED_URL}/api/health\") && echo \"${health}\" | grep -q '\"ok\":true'"
+  labels:
+    team: platform
+    layer: delivery
+    surface: web
+    runtime: cloudflare
