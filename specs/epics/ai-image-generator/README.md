@@ -8,7 +8,7 @@ baseline that makes a copy of it somebody else's in one landing.**
 
 | | |
 |---|---|
-| Status | In progress — IG0 on main |
+| Status | In progress — IG1 on main: the site runs on Workers |
 | Upstream | [vercel-labs/ai-sdk-image-generator](https://github.com/vercel-labs/ai-sdk-image-generator), at `5130ba8` (2026-04-25), Apache-2.0 |
 | Reference | [clerk-auth-starter](https://github.com/sourceplane/clerk-auth-starter) — the same portfolio-starter-kit scaffolding, tests and bootstrap, and SaaS keys handed to the Worker by the deploy; [ai-chatbot](https://github.com/sourceplane/ai-chatbot) — Workers AI as the keyless default; [nl-postgres](https://github.com/sourceplane/nl-postgres) — a Workers AI stand-in for `wrangler dev` |
 | Key | `IG` |

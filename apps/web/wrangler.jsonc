@@ -1,0 +1,18 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "ai-image-generator-web",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-10-01",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  // Workers AI, on the account the Worker deploys into: the image provider
+  // that needs no key (lib/workers-ai-image.ts). Billed to that account, by
+  // the neuron, with Workers Free's daily allowance first.
+  "ai": {
+    "binding": "AI"
+  },
+  "observability": { "enabled": true }
+}
