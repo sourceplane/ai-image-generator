@@ -4,9 +4,9 @@ Vercel's [AI SDK Image Generator](https://github.com/vercel-labs/ai-sdk-image-ge
 — one prompt, and the image each provider's model draws from it, side by
 side, with a model picker per provider, a performance/quality switch and
 each image's time — running on **Cloudflare Workers + Static Assets**
-through [`@opennextjs/cloudflare`](https://opennext.js.org/cloudflare), deployed by
-[Orun](https://github.com/sourceplane/orun) to stage and prod on every merge.
-Packaging it as an Orun baseline is the next milestone (IG2).
+through [`@opennextjs/cloudflare`](https://opennext.js.org/cloudflare), and
+packaged as an **Orun baseline**: one command takes a new site from nothing
+to live on stage and prod, in its own repository, under its own name.
 
 The template's code is the code. What the port adds is the Workers build,
 the monorepo wrapper, a test package and the deploy contract; what it
@@ -18,10 +18,50 @@ keys are stored — Orun secrets the owner adds after the build, handed to the
 Worker as Worker secrets and never seen by the build; the page lists, and
 the image route allows, only those providers and only the models the page
 offers; Vercel Analytics is gone and the "Deploy with Vercel" button is the
-site's own source link. See
+site's own source link. What the baseline adds is everything needed to make
+a copy of it somebody else's — built the way
+[cirrus-baseline](https://github.com/sourceplane/cirrus-baseline) is. See
 [`specs/epics/ai-image-generator`](specs/epics/ai-image-generator/README.md)
 for the design, the milestones and the as-built status, including every
 departure.
+
+## Instantiating a site
+
+```bash
+git clone --depth 1 --branch <baseline-tag> https://github.com/sourceplane/ai-image-generator
+cd ai-image-generator
+orun new --blueprint repo-blueprint.yaml --out ~/sites/acme-images --run-hooks --resume \
+  --set reponame=acme-images --set productname="Acme Images" \
+  --set githuborg=acme-inc --set subdomain=<workers-dev-subdomain>
+```
+
+Or, once the platform's registry lists it, from the Orun console (Baselines →
+`ai-image-generator` → Build). Two phases — `01-product` (the repository
+created, then the whole site in one pull request, deployed to stage and prod
+and smoke-tested) and `03-docs` (the live deployment recorded) — each landing
+one pull request in the new repository.
+**[BOOTSTRAP.md](BOOTSTRAP.md)** is the operator guide;
+[docs/phases/](docs/phases/README.md) has a page per phase.
+
+The new repository receives the **site only** — the app, its tests, its CI,
+its tooling, a README and an `AGENTS.md` of its own and its operating
+contract — renamed throughout to the site's name, repository and Cloudflare
+Worker. None of this repository's machinery ships. **The other providers are
+the owner's to add afterwards** (the site's README, "Add a provider"): no
+platform brokers them, so the card asks for no provider key, and the site
+goes live drawing with Workers AI alone.
+
+| What makes it a baseline | Where |
+|---|---|
+| The console card (inputs, secrets, programme) | `blueprint.yaml` |
+| The build document (modules, phases, hooks) | `repo-blueprint.yaml` |
+| This tree's identity, and the bootstrap's task contracts | `.baseline/` |
+| The rename engine (product-name seam: `apps/web/app/site.ts`) | `tooling/rebrand/rebrand.mjs` |
+| The bootstrap's helpers (deferrals, redeploy marker, work-tree strip) | `tooling/bootstrap/` |
+| The deployment-record renderer | `hooks/render-deployment-docs.sh` |
+| The site's README, agent page and context pack | `.baseline/product/README.md`, `.baseline/product/AGENTS.md`, `ai/context/` |
+| The baseline's tests: contract, leak, offline bootstrap, end to end | `testing/`, `.github/workflows/baseline.yml` |
+| Cutting a `baseline-vN` tag | `.github/workflows/tag.yml` |
 
 ## What is here (the site)
 
@@ -69,3 +109,5 @@ wrangler login` once. Another provider's key goes in `apps/web/.env.local`
 | Workflow | What it runs | Ships to a site |
 |---|---|---|
 | `ci.yml` | the Orun pipeline, and the only workflow a site carries: `orun plan --changed`, then one job per lane. A pull request runs the verify lanes (the site built and dry-deployed per environment; the tests' `quick-check` lane installs and checks the package, it does not run them), except the bootstrap's own landings (`orun/BASE-*`), where `plan` alone is the check; a merge deploys stage → prod. It plans nothing while `intent.yaml` names the placeholder workspace `ws_CHANGE_ME`, as this repository does. A manual run (Orunbase's Deploy button, or Run workflow on `main`) plans the environment and components it names under the push-to-main trigger, so they deploy as a merge deploys them | yes |
+| `baseline.yml` | the baseline's own tiers: contract tests, the blueprint read by the pinned orun, the leak gate, the offline bootstrap, the site built, dry-deployed and served over a Workers AI stand-in — with no key (every Workers AI model drawing, every keyed provider refused) and with made-up keys (no key in any file of the build, the keyed providers listed) | no |
+| `tag.yml` | cuts a `baseline-vN` tag (manual) | no |

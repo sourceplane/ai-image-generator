@@ -9,7 +9,7 @@ metadata:
 spec:
   title: "Vercel's AI SDK Image Generator on Cloudflare Workers"
   summary: "Vercel's AI SDK Image Generator — one prompt, the image each provider's model draws from it, side by side — runs on Cloudflare Workers + Static Assets through @opennextjs/cloudflare, drawing with Workers AI through the Worker's own binding from its first deploy and with the template's providers once their keys are Orun secrets, inside the Cirrus baseline's repository conventions, and becomes an Orun baseline that takes a new site from nothing to live on stage and prod in one landing."
-  state: started
+  state: completed
   milestones:
     - name: "IG0 — the spec"
       exitCriteria:
