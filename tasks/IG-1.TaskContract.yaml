@@ -1,0 +1,15 @@
+apiVersion: orun.io/v1
+kind: TaskContract
+metadata:
+  name: IG-1
+  title: "The spec"
+spec:
+  goal: The ai-image-generator epic is declared and written down — what the template is, how each Vercel piece maps to Cloudflare, Workers AI as the provider that needs no key, the milestones, the risks — before any of it is built
+  affects:
+    - specs/epics/ai-image-generator
+    - tasks
+  doneWhen:
+    - epic.yaml declares key IG and its three milestones
+    - the README, design, implementation plan, risks and implementation status are written
+    - the three task contracts are on main
+  gates: []

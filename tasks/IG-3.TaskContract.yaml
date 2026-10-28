@@ -1,0 +1,24 @@
+apiVersion: orun.io/v1
+kind: TaskContract
+metadata:
+  name: IG-3
+  title: "ai-image-generator becomes an Orun baseline"
+spec:
+  goal: This repository is an Orun baseline — a console card, a build document, the bootstrap's machinery and its tests — that takes a new image-generator site from nothing to live on stage and prod in one landing, then records it
+  affects:
+    - blueprint.yaml
+    - repo-blueprint.yaml
+    - .baseline
+    - BOOTSTRAP.md
+    - docs/phases
+    - hooks
+    - ai/context
+    - testing
+    - tooling
+    - .github/workflows
+    - specs
+  doneWhen:
+    - every Baseline CI tier is green, locally on orun v2.89.0 and on the pull request
+    - the platform's own reader accepts blueprint.yaml
+    - a site placed from it is the site only, branded throughout
+  gates: []

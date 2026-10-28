@@ -1,0 +1,20 @@
+apiVersion: orun.io/v1
+kind: TaskContract
+metadata:
+  name: IG-2
+  title: "The image generator on Workers"
+spec:
+  goal: Vercel's AI SDK Image Generator runs on Cloudflare Workers + Static Assets through OpenNext, draws with Workers AI through the Worker's own binding with no key, offers the template's providers only once their keys are Worker secrets, keeps every key out of every bundle, and has its tests and a README that says how it maps to Vercel
+  affects:
+    - apps/web
+    - tests/web
+    - tooling/wire
+    - pnpm-lock.yaml
+    - pnpm-workspace.yaml
+    - README.md
+    - .gitignore
+  doneWhen:
+    - pnpm typecheck, lint, test and build are green
+    - wrangler dev serves every route, each Workers AI model drawing through a stand-in for the binding, with no key and with keys
+    - the Worker is under Workers Free's 3 MiB gzipped
+  gates: []
