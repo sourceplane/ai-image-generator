@@ -16,8 +16,8 @@ const basePrompts: { text: string; prompt: string }[] = [
       "A sultry chicken peering around the corner from shadows, clearly up to no good",
   },
   {
-    text: "Cat Vercel",
-    prompt: "A cat launching its website on Vercel",
+    text: "Cat Orunbase",
+    prompt: "A cat launching its website on Orunbase",
   },
   {
     text: "Red Panda",
